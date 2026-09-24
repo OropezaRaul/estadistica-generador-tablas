@@ -1,18 +1,19 @@
 """
-Compilador Dinámico de Documentos PDF en ReportLab.
+Compilador Dinámico de Documentos PDF en ReportLab con Índice Interactivo y Marcadores.
 Permite compilar guías de ejercicios personalizadas de cualquier tamaño y distribución:
 - Portada institucional.
-- Secciones analíticas con formato riguroso.
+- Índice General Interactivo con enlaces clicables directos a cada tabla/distribución.
+- Marcadores de navegación nativos del visor PDF (TOC / Outlines).
 - Cada ejercicio incluye:
   1. Orden del ejercicio estructurada
   2. Resolución analítica detallada paso a paso citando las tablas oficiales
   3. Gráfico teórico sombreado incrustado
 - Numeración correlativa 'Página X de Y' con NumberedCanvas.
-- Exportación organizada a la carpeta 'Resultados/' con numeración secuencial
-  distinguiendo entre 'Completo' y 'Parcial'.
+- Exportación organizada a la carpeta 'Resultados/' con numeración secuencial.
 """
 import os
 import re
+import pymupdf
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
@@ -131,7 +132,8 @@ def convert_to_reportlab_html(text):
 def compilar_guia_pdf(ejercicios, nombre_archivo=None, titulo=None, subtitulo=None, dist_tag="VARIADO"):
     """
     Compila un documento PDF con cualquier lista de ejercicios y lo almacena por defecto
-    en la carpeta Resultados/ con nombre correlativo y descriptivo.
+    en la carpeta Resultados/ con nombre correlativo y descriptivo, incorporando un
+    Índice Interactivo clicable y marcadores nativos en el lector de PDF.
     """
     es_completo = len(ejercicios) >= 176
     if not nombre_archivo:
@@ -220,10 +222,32 @@ def compilar_guia_pdf(ejercicios, nombre_archivo=None, titulo=None, subtitulo=No
         leading=13,
         textColor=colors.HexColor("#1d3557")
     )
+    style_toc_title = ParagraphStyle(
+        "TocTitle",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=18,
+        leading=22,
+        textColor=colors.HexColor("#1d3557"),
+        alignment=1,
+        spaceAfter=10
+    )
+    style_toc_desc = ParagraphStyle(
+        "TocDesc",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=9.5,
+        leading=13,
+        textColor=colors.HexColor("#4b5563"),
+        alignment=1,
+        spaceAfter=20
+    )
 
     story = []
 
-    # Portada
+    # =========================================================================
+    # 1. PORTADA
+    # =========================================================================
     story.append(Spacer(1, 35))
     story.append(Paragraph("ESTADÍSTICA E INGENIERÍA • TABLAS OFICIALES", style_cover_badge))
     story.append(Paragraph(titulo, style_cover_title))
@@ -235,16 +259,121 @@ def compilar_guia_pdf(ejercicios, nombre_archivo=None, titulo=None, subtitulo=No
         f"• Total de ejercicios incluidos: <b>{len(ejercicios)}</b><br/>"
         f"• Resolución analítica rigurosa citando coordenadas de la tabla oficial.<br/>"
         f"• Gráficas teóricas con áreas de probabilidad sombreadas y puntos críticos señalados.<br/>"
+        f"• Incluye <b>Índice Interactivo</b> y marcadores para navegación rápida entre tablas.<br/>"
         f"• Documento exportado automáticamente a la carpeta <code>Resultados/</code>."
     )
     story.append(Paragraph(meta_p, style_body))
     story.append(PageBreak())
 
-    # Ejercicios
+    # =========================================================================
+    # 2. ÍNDICE GENERAL INTERACTIVO (PÁGINA 2)
+    # =========================================================================
+    story.append(Spacer(1, 15))
+    story.append(Paragraph("ÍNDICE GENERAL INTERACTIVO", style_toc_title))
+    story.append(Paragraph("Haz clic en cualquier sección para saltar directamente al inicio de sus ejercicios:", style_toc_desc))
+
+    # Analizar qué distribuciones y rangos de ejercicios están presentes en el lote
+    dist_nombres = {
+        "z": ("NORMAL ESTÁNDAR", "Normal Estándar Z ~ N(0, 1)"),
+        "t": ("t-STUDENT", "t-Student T ~ t(r)"),
+        "chi": ("CHI-CUADRADO", "Chi-cuadrado X ~ χ²(r)"),
+        "fisher": ("FISHER-SNEDECOR", "Fisher-Snedecor F ~ F(r₁, r₂)")
+    }
+
+    secciones_info = []
+    current_dist = None
+    start_id = None
+    prev_ej = None
+
+    for i, ej in enumerate(ejercicios):
+        d_type = ej.get("dist_type", "").lower()
+        if d_type != current_dist:
+            if current_dist is not None and prev_ej is not None:
+                short_name, full_name = dist_nombres.get(current_dist, (current_dist.upper(), current_dist.upper()))
+                secciones_info.append({
+                    "dist_type": current_dist,
+                    "search_key": short_name,
+                    "nombre": full_name,
+                    "start_id": start_id,
+                    "end_id": prev_ej.get("id", i),
+                    "count": (prev_ej.get("id", i) - start_id + 1)
+                })
+            current_dist = d_type
+            start_id = ej.get("id", i + 1)
+        prev_ej = ej
+
+    if current_dist is not None and prev_ej is not None:
+        short_name, full_name = dist_nombres.get(current_dist, (current_dist.upper(), current_dist.upper()))
+        secciones_info.append({
+            "dist_type": current_dist,
+            "search_key": short_name,
+            "nombre": full_name,
+            "start_id": start_id,
+            "end_id": prev_ej.get("id", len(ejercicios)),
+            "count": (prev_ej.get("id", len(ejercicios)) - start_id + 1)
+        })
+
+    # Construir filas de la tabla de índice
+    toc_table_data = []
+    for num_sec, s in enumerate(secciones_info, start=1):
+        col_left = (
+            f"<b>{num_sec}. SECCIÓN: {s['search_key']}</b><br/>"
+            f"<font color='#6b7280'>{s['nombre']} &bull; Ejercicios {s['start_id']} al {s['end_id']} ({s['count']} problemas)</font>"
+        )
+        col_right = "<font color='#0d6efd'><b>[Ir a los ejercicios &rarr;]</b></font>"
+        toc_table_data.append([
+            Paragraph(col_left, style_body),
+            Paragraph(col_right, style_body)
+        ])
+
+    t_toc = Table(toc_table_data, colWidths=[400, 132])
+    t_toc.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+        ("GRID", (0, 0), (-1, -1), 0.8, colors.HexColor("#e2e8f0")),
+        ("TOPPADDING", (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+    ]))
+    story.append(t_toc)
+    story.append(Spacer(1, 25))
+    
+    nota_navegacion = (
+        "<i>Nota de Navegación:</i> Además de los enlaces en este índice, el documento incluye "
+        "<b>marcadores de esquema PDF nativos</b> (Bookmarks) disponibles en la barra lateral izquierda "
+        "de tu lector de PDF (Chrome, Edge, Adobe Reader, etc.) para saltar entre tablas desde cualquier página."
+    )
+    story.append(Paragraph(nota_navegacion, style_body))
+    story.append(PageBreak())
+
+    # =========================================================================
+    # 3. EJERCICIOS
+    # =========================================================================
+    dist_actual_ej = None
+
     for idx, ej in enumerate(ejercicios):
         ej_id = ej.get("id", idx + 1)
         crit_nom = ej.get("criterio_nombre", "")
         dist_nom = ej.get("distribucion", "")
+        d_type = ej.get("dist_type", "").lower()
+
+        # Banner de inicio de sección para el primer ejercicio de cada distribución
+        if d_type != dist_actual_ej:
+            dist_actual_ej = d_type
+            short_name, full_name = dist_nombres.get(d_type, (d_type.upper(), d_type.upper()))
+            banner_text = f"<b>INICIO DE SECCIÓN: {short_name}</b> &bull; {full_name}"
+            t_banner = Table([[Paragraph(banner_text, style_ej_header)]], colWidths=[532])
+            t_banner.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#0f172a")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]))
+            story.append(t_banner)
+            story.append(Spacer(1, 4))
+
+        # Encabezado del ejercicio
         header_text = f"<b>EJERCICIO {ej_id}:</b> {dist_nom}" + (f" &nbsp;|&nbsp; <b>Caso:</b> {crit_nom}" if crit_nom else "")
         t_header = Table([[Paragraph(header_text, style_ej_header)]], colWidths=[532])
         t_header.setStyle(TableStyle([
@@ -291,5 +420,71 @@ def compilar_guia_pdf(ejercicios, nombre_archivo=None, titulo=None, subtitulo=No
 
         story.append(PageBreak())
 
+    # Compilación ReportLab
     doc.build(story, canvasmaker=NumberedCanvas)
+
+    # =========================================================================
+    # 4. POST-PROCESAMIENTO CON PyMuPDF (ENLACES CLICABLES Y MARCADORES)
+    # =========================================================================
+    try:
+        pdf = pymupdf.open(nombre_archivo)
+        
+        # Detectar la página exacta donde inicia cada sección
+        section_start_pages = {}
+        for p_idx, page in enumerate(pdf):
+            txt = page.get_text()
+            for s in secciones_info:
+                key = s["search_key"]
+                if key not in section_start_pages and f"INICIO DE SECCIÓN: {key}" in txt:
+                    section_start_pages[key] = p_idx  # 0-indexed
+
+        # Página 2 (Índice): p_idx = 1
+        if len(pdf) >= 2:
+            page_indice = pdf[1]
+            for s in secciones_info:
+                key = s["search_key"]
+                if key in section_start_pages:
+                    target_page_idx = section_start_pages[key]
+                    rects = page_indice.search_for(key)
+                    if rects:
+                        r = rects[0]
+                        # Rectángulo clicable que cubre toda la fila de la tabla
+                        click_rect = pymupdf.Rect(40, r.y0 - 6, 572, r.y1 + 18)
+                        page_indice.insert_link({
+                            "kind": pymupdf.LINK_GOTO,
+                            "from": click_rect,
+                            "page": target_page_idx
+                        })
+
+        # Construir Outline / Marcadores laterales del PDF
+        toc_outline = [
+            [1, "Portada", 1],
+            [1, "Índice General Interactivo", 2]
+        ]
+        for s in secciones_info:
+            key = s["search_key"]
+            if key in section_start_pages:
+                pg_num = section_start_pages[key] + 1  # 1-indexed para PyMuPDF TOC
+                toc_outline.append([1, f"Sección: {s['nombre']} (Ej. {s['start_id']} al {s['end_id']})", pg_num])
+
+        pdf.set_toc(toc_outline)
+        
+        # Guardar en archivo temporal e intercambiar para escritura segura
+        temp_out = nombre_archivo + ".tmp"
+        pdf.save(temp_out)
+        pdf.close()
+        os.replace(temp_out, nombre_archivo)
+        print(f" -> Enlaces interactivos y marcadores agregados exitosamente en '{nombre_archivo}'.")
+
+    except Exception as ex:
+        print(f"Aviso durante post-procesamiento de enlaces: {ex}")
+
     return nombre_archivo
+
+if __name__ == "__main__":
+    from generador_ejercicios import GeneradorEjercicios
+    gen = GeneradorEjercicios()
+    print("Probando compilación con Índice Interactivo...")
+    ej_list = gen.generar_lote_personalizado(["z", "t"], [1, 2], repeticiones_por_tipo=2)
+    out = compilar_guia_pdf(ej_list, titulo="GUÍA DE PRUEBA CON ÍNDICE")
+    print("PDF generado con éxito en:", out)
