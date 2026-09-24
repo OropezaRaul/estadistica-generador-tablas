@@ -132,32 +132,34 @@ class GeneradorEjercicios:
 
         elif crit == 4:
             a = params.get("val") or random_z()
-            prob, r_k, c_k = self.tm.get_z(a)
+            prob_pos, r_k, c_k = self.tm.get_z(a)
+            p_cola_izq = round(1.0 - prob_pos, 4)
+            res = round(1.0 - p_cola_izq, 4)
             e["criterio_nombre"] = ">= -"
             e["orden"] = f"P(Z \\ge -{a:.2f}) = ?"
             e["resolucion"] = (
-                f"**Paso 1: Identificación y planteamiento.**\n"
-                f"Para $Z \\sim \\mathcal{{N}}(0, 1)$, se solicita la probabilidad de cola superior derecha a partir del valor negativo $-a = -{a:.2f}$.\n\n"
-                f"**Paso 2: Aplicación formal de la Regla del Complemento.**\n"
-                f"Por axioma de probabilidad, la probabilidad hacia la derecha de cualquier punto es el complemento del área acumulada hacia la izquierda:\n"
+                f"**Paso 1: Planteamiento formal por la Regla del Complemento.**\n"
+                f"Para $Z \\sim \\mathcal{{N}}(0, 1)$, se solicita la probabilidad de cola derecha a partir del valor negativo $-a = -{a:.2f}$. "
+                f"Aplicando la regla fundamental del complemento:\n"
                 f"$$P(Z \\ge -{a:.2f}) = 1 - P(Z \\le -{a:.2f})$$\n\n"
-                f"**Paso 3: Aplicación de la propiedad de simetría en la cola inferior.**\n"
-                f"Por la perfecta simetría de la campana de Gauss respecto al origen ($z = 0$), el área acumulada en la cola izquierda hasta el valor negativo $-{a:.2f}$ equivale a la cola derecha superior de $+{a:.2f}$, es decir:\n"
-                f"$$P(Z \\le -{a:.2f}) = 1 - P(Z \\le {a:.2f})$$\n\n"
-                f"**Paso 4: Sustitución algebraica.**\n"
-                f"Sustituyendo esta igualdad en la regla del complemento:\n"
-                f"$$P(Z \\ge -{a:.2f}) = 1 - [1 - P(Z \\le {a:.2f})] = P(Z \\le {a:.2f})$$\n\n"
-                f"**Paso 5: Consulta en la Tabla Normal Estándar.**\n"
-                f"Buscamos el valor positivo $a = {a:.2f}$ en la fila `{r_k}` y columna `{c_k}`:\n"
-                f"$$P(Z \\le {a:.2f}) = {prob:.4f}$$\n\n"
-                f"**Paso 6: Conclusión y justificación geométrica de la gráfica.**\n"
-                f"$$P(Z \\ge -{a:.2f}) = {prob:.4f}$$ (o {prob*100:.2f}%).\n\n"
-                f"*(Nota sobre la gráfica: La región sombreada corresponde fielmente a la orden $Z \\ge -{a:.2f}$. Se inicia en el valor negativo $-{a:.2f}$, cruza el eje central en $0$ y se extiende hacia todo $+\\infty$, abarcando más del 50% de la distribución).* "
+                f"**Paso 2: Cálculo numérico de la cola izquierda no sombreada P(Z \\le -{a:.2f}).**\n"
+                f"Para hallar el área acumulada hasta el valor negativo $-{a:.2f}$, usamos la simetría de la campana en torno a cero:\n"
+                f"$$P(Z \\le -{a:.2f}) = 1 - P(Z \\le {a:.2f})$$\n"
+                f"Consultando la Tabla Normal Estándar en la fila `{r_k}` y columna `{c_k}`, tenemos $P(Z \\le {a:.2f}) = {prob_pos:.4f}$.\n"
+                f"Por tanto, el área de la cola izquierda es:\n"
+                f"$$P(Z \\le -{a:.2f}) = 1 - {prob_pos:.4f} = {p_cola_izq:.4f}$$\n\n"
+                f"**Paso 3: Aplicación del complemento para obtener el área pedida.**\n"
+                f"Restamos la cola izquierda ({p_cola_izq:.4f}) de la probabilidad total (1):\n"
+                f"$$P(Z \\ge -{a:.2f}) = 1 - P(Z \\le -{a:.2f}) = 1 - {p_cola_izq:.4f} = {res:.4f}$$\n\n"
+                f"**Paso 4: Conclusión y lectura de la gráfica.**\n"
+                f"$$P(Z \\ge -{a:.2f}) = {res:.4f}$$ (o {res*100:.2f}%).\n\n"
+                f"*(Nota sobre la gráfica: La región sombreada inicia en el valor negativo $-{a:.2f}$ y se extiende hacia toda la derecha $+\\infty$. "
+                f"Abarca toda la curva excepto la colita izquierda en blanco de {p_cola_izq:.4f}, por lo que el área sombreada mide exactamente {res:.4f}).*"
             )
             e["region_type"] = "right"
             e["points"] = [-a]
             e["labels"] = [f"z = -{a:.2f}"]
-            e["probabilidad"] = prob
+            e["probabilidad"] = res
 
         elif crit == 5:
             if params.get("val") and isinstance(params.get("val"), (list, tuple)):
@@ -417,26 +419,32 @@ class GeneradorEjercicios:
         elif crit == 4:
             p_level = random.choice(["0.800", "0.900", "0.950", "0.975"])
             a = self.tm.get_t(df, p_level)
+            prob_pos = float(p_level)
+            p_cola_izq = round(1.0 - prob_pos, 3)
+            res = round(1.0 - p_cola_izq, 3)
             e["criterio_nombre"] = ">= -"
             e["orden"] = f"P(T_{{{df}}} \\ge -{a:.3f}) = ?"
             e["resolucion"] = (
-                f"**Paso 1: Identificación y planteamiento.**\n"
-                f"Para $T \\sim t({df})$, se solicita la probabilidad de cola derecha a partir del valor negativo $-a = -{a:.3f}$.\n\n"
-                f"**Paso 2: Aplicación formal de la Regla del Complemento.**\n"
+                f"**Paso 1: Planteamiento formal por la Regla del Complemento.**\n"
+                f"Para $T \\sim t({df})$, se solicita la probabilidad de cola derecha a partir del valor negativo $-a = -{a:.3f}$:\n"
                 f"$$P(T_{{{df}}} \\ge -{a:.3f}) = 1 - P(T_{{{df}}} \\le -{a:.3f})$$\n\n"
-                f"**Paso 3: Aplicación de la propiedad de simetría en la cola inferior.**\n"
-                f"Por simetría respecto al origen: $P(T_{{{df}}} \\le -{a:.3f}) = 1 - P(T_{{{df}}} \\le {a:.3f})$.\n\n"
-                f"**Paso 4: Sustitución algebraica.**\n"
-                f"$$P(T_{{{df}}} \\ge -{a:.3f}) = 1 - [1 - P(T_{{{df}}} \\le {a:.3f})] = P(T_{{{df}}} \\le {a:.3f})$$\n\n"
-                f"**Paso 5: Consulta en la Tabla t-Student.**\n"
-                f"En la fila $r = {df}$, el cuantil $a = {a:.3f}$ se encuentra bajo la columna $1 - \\alpha = {p_level}$. Por tanto:\n"
-                f"$$P(T_{{{df}}} \\ge -{a:.3f}) = {p_level}$$\n\n"
-                f"*(Nota sobre la gráfica: La región sombreada inicia en el valor negativo $-{a:.3f}$ y se extiende hacia toda la derecha $+\\infty$, abarcando más del 50% de la curva).* "
+                f"**Paso 2: Cálculo numérico de la cola izquierda no sombreada P(T \\le -{a:.3f}).**\n"
+                f"Por simetría respecto al origen: $P(T_{{{df}}} \\le -{a:.3f}) = 1 - P(T_{{{df}}} \\le {a:.3f})$.\n"
+                f"En la fila $r = {df}$, el cuantil $a = {a:.3f}$ se encuentra bajo la columna $1 - \\alpha = {p_level}$.\n"
+                f"Por tanto, la probabilidad de la cola izquierda es:\n"
+                f"$$P(T_{{{df}}} \\le -{a:.3f}) = 1 - {prob_pos:.3f} = {p_cola_izq:.3f}$$\n\n"
+                f"**Paso 3: Aplicación del complemento para obtener el área pedida.**\n"
+                f"Restamos la cola izquierda ({p_cola_izq:.3f}) del área total (1):\n"
+                f"$$P(T_{{{df}}} \\ge -{a:.3f}) = 1 - P(T_{{{df}}} \\le -{a:.3f}) = 1 - {p_cola_izq:.3f} = {res:.3f}$$\n\n"
+                f"**Paso 4: Conclusión y lectura de la gráfica.**\n"
+                f"$$P(T_{{{df}}} \\ge -{a:.3f}) = {res:.3f}$$ (o {res*100:.1f}%).\n\n"
+                f"*(Nota sobre la gráfica: La región sombreada inicia en el valor negativo $-{a:.3f}$ y se extiende hacia toda la derecha $+\\infty$, "
+                f"abarcando toda la curva excepto la colita izquierda en blanco de {p_cola_izq:.3f}, midiendo exactamente {res:.3f}).*"
             )
             e["region_type"] = "right"
             e["points"] = [-a]
             e["labels"] = [f"t = -{a:.3f}"]
-            e["probabilidad"] = float(p_level)
+            e["probabilidad"] = res
 
         elif crit == 5:
             idx1 = random.randint(0, len(t_probs) - 3)
