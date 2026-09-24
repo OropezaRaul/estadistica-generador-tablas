@@ -1,0 +1,25 @@
+# Entornos virtuales
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache y compilados
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Carpetas de salida en tiempo de ejecución (conserva tus resultados y gráficos locales)
+Resultados/*
+!Resultados/.gitkeep
+graficos/*
+!graficos/.gitkeep
+
+# Paquetes ZIP de distribución local
+*.zip

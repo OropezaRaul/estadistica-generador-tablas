@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Estadístico Interactivo • Generador y Resolvedor de Tablas Oficiales</title>
+  <meta name="description" content="Plataforma interactiva para generar y resolver ejercicios analíticos de probabilidad con las tablas oficiales de Normal Estándar, t-Student, Chi-cuadrado y Fisher-Snedecor.">
+  
+  <!-- Tipografía Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Aviso de seguridad si se abre directamente por explorador file:// -->
+  <div id="file-protocol-warning" style="display:none; background: #dc2626; color: #fff; padding: 0.9rem 1.5rem; text-align: center; font-size: 0.95rem; font-weight: 600; border-bottom: 2px solid #b91c1c;">
+    ⚠️ Has abierto el archivo HTML directamente en el navegador (protocolo file://). Para que los botones, generadores y gráficas funcionen, debes iniciar el servidor ejecutando <code>iniciar_windows.bat</code> (en Windows) o <code>./iniciar_linux.sh</code> (en Linux) y acceder a <u>http://127.0.0.1:5000</u>.
+  </div>
+  <script>
+    if (window.location.protocol === 'file:') {
+      document.getElementById('file-protocol-warning').style.display = 'block';
+    }
+  </script>
+
+  <!-- HEADER / NAVEGACIÓN -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="#" class="brand" id="brand-logo">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 20h18"/>
+            <path d="M4 17c3-1 5-9 8-9s5 8 8 9"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Estadística Hub</h1>
+          <span>Tablas Oficiales &bull; Z, t, χ², F</span>
+        </div>
+      </a>
+
+      <!-- Pestañas de Navegación -->
+      <nav class="nav-tabs" role="tablist">
+        <button class="tab-btn active" data-tab="tab-generador" id="nav-btn-generador">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          Generador de Ejercicios
+        </button>
+        <button class="tab-btn" data-tab="tab-resolver" id="nav-btn-resolver">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Resolvedor & Gráficos
+        </button>
+        <button class="tab-btn" data-tab="tab-tablas" id="nav-btn-tablas">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm0 6h18M9 3v18"/></svg>
+          Tablas Oficiales
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- ====================================================================
+         PESTAÑA 1: GENERADOR DE EJERCICIOS Y GUÍAS
+         ==================================================================== -->
+    <section id="tab-generador" class="tab-content active" role="tabpanel">
+      <div class="card-panel">
+        <div class="panel-header">
+          <h2>
+            <svg width="24" height="24" fill="none" stroke="var(--primary)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+            Configuración del Lote de Ejercicios
+          </h2>
+          <p>Selecciona la distribución, los criterios analíticos deseados y la cantidad de problemas a generar con sus resoluciones y gráficos.</p>
+        </div>
+
+        <!-- Banner Guía Completa Rápida -->
+        <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: var(--radius-md); padding: 1.1rem 1.4rem; margin-bottom: 1.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h4 style="color: #fff; font-size: 1.05rem; margin-bottom: 0.2rem;">¿Necesitas la Guía Oficial Completa de Estudio?</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Genera y descarga en un solo clic el documento de 176 ejercicios (4 tandas × 11 criterios × 4 distribuciones) con portada y gráficos.</p>
+          </div>
+          <button class="btn-secondary" id="btn-guia-completa-web" style="border-color: var(--primary); color: #fff;">
+            <svg width="16" height="16" fill="var(--primary)" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Generar Guía Completa (176 Ejercicios)
+          </button>
+        </div>
+
+        <!-- 1. Distribución -->
+        <label style="font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.8rem; display: block;">1. Selecciona la Distribución:</label>
+        <div class="dist-selector-grid">
+          <div class="dist-card gen-dist-card selected" data-dist="z">
+            <input type="radio" name="gen-dist" value="z" checked id="radio-dist-z">
+            <div class="dist-card-icon">Z</div>
+            <div class="dist-card-info">
+              <h4>Normal Estándar</h4>
+              <span>Z ~ N(0, 1)</span>
+            </div>
+          </div>
+          <div class="dist-card gen-dist-card" data-dist="t">
+            <input type="radio" name="gen-dist" value="t" id="radio-dist-t">
+            <div class="dist-card-icon">T</div>
+            <div class="dist-card-info">
+              <h4>t-Student</h4>
+              <span>T ~ t(r)</span>
+            </div>
+          </div>
+          <div class="dist-card gen-dist-card" data-dist="chi">
+            <input type="radio" name="gen-dist" value="chi" id="radio-dist-chi">
+            <div class="dist-card-icon">χ²</div>
+            <div class="dist-card-info">
+              <h4>Chi-cuadrado</h4>
+              <span>X ~ χ²(r)</span>
+            </div>
+          </div>
+          <div class="dist-card gen-dist-card" data-dist="fisher">
+            <input type="radio" name="gen-dist" value="fisher" id="radio-dist-fisher">
+            <div class="dist-card-icon">F</div>
+            <div class="dist-card-info">
+              <h4>Fisher-Snedecor</h4>
+              <span>F ~ F(r₁, r₂)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Parámetros específicos condicionales -->
+        <div class="form-row" id="gen-param-df-group" style="display: none;">
+          <div class="form-group" style="max-width: 320px;">
+            <label for="gen-df">Grados de libertad (r):</label>
+            <input type="number" id="gen-df" class="form-control" value="10" min="1" max="120" placeholder="Ej. 10">
+          </div>
+        </div>
+
+        <div class="form-row" id="gen-param-fisher-group" style="display: none;">
+          <div class="form-group" style="max-width: 200px;">
+            <label for="gen-r1">Grados numerador (r₁):</label>
+            <input type="number" id="gen-r1" class="form-control" value="5" min="1" max="120">
+          </div>
+          <div class="form-group" style="max-width: 200px;">
+            <label for="gen-r2">Grados denominador (r₂):</label>
+            <input type="number" id="gen-r2" class="form-control" value="10" min="1" max="120">
+          </div>
+        </div>
+
+        <!-- 2. Criterios Analíticos -->
+        <label style="font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.6rem; display: block;">2. Criterios Analíticos Oficiales a Incluir:</label>
+        
+        <div class="criteria-filter-bar">
+          <button class="btn-filter-shortcut" id="btn-crit-all">Todos (1-11)</button>
+          <button class="btn-filter-shortcut" id="btn-crit-tails">Colas Directas (1-4)</button>
+          <button class="btn-filter-shortcut" id="btn-crit-intervals">Intervalos (5-7)</button>
+          <button class="btn-filter-shortcut" id="btn-crit-inverse">Búsqueda Inversa (8-11)</button>
+        </div>
+
+        <div class="criteria-grid" id="criteria-chips-container">
+          <div class="criterion-chip active" data-id="1">
+            <span class="chip-badge">&le; +</span>
+            <div class="chip-desc">Cola izquierda positiva</div>
+          </div>
+          <div class="criterion-chip active" data-id="2">
+            <span class="chip-badge">&le; -</span>
+            <div class="chip-desc">Cola izquierda negativa</div>
+          </div>
+          <div class="criterion-chip active" data-id="3">
+            <span class="chip-badge">&ge; +</span>
+            <div class="chip-desc">Cola derecha positiva</div>
+          </div>
+          <div class="criterion-chip active" data-id="4">
+            <span class="chip-badge">&ge; -</span>
+            <div class="chip-desc">Cola derecha negativa</div>
+          </div>
+          <div class="criterion-chip active" data-id="5">
+            <span class="chip-badge">- &le; &le; +</span>
+            <div class="chip-desc">Intervalo bilateral</div>
+          </div>
+          <div class="criterion-chip active" data-id="6">
+            <span class="chip-badge">+ &le; &le; +</span>
+            <div class="chip-desc">Intervalo positivo</div>
+          </div>
+          <div class="criterion-chip active" data-id="7">
+            <span class="chip-badge">- &le; &le; -</span>
+            <div class="chip-desc">Intervalo negativo</div>
+          </div>
+          <div class="criterion-chip active" data-id="8">
+            <span class="chip-badge">&le; C</span>
+            <div class="chip-desc">Inversa cola izq. positiva</div>
+          </div>
+          <div class="criterion-chip active" data-id="9">
+            <span class="chip-badge">&ge; C</span>
+            <div class="chip-desc">Inversa cola der. positiva</div>
+          </div>
+          <div class="criterion-chip active" data-id="10">
+            <span class="chip-badge">&le; -C</span>
+            <div class="chip-desc">Inversa cuantil negativo</div>
+          </div>
+          <div class="criterion-chip active" data-id="11">
+            <span class="chip-badge">&ge; -C</span>
+            <div class="chip-desc">Inversa cuantil negativo</div>
+          </div>
+        </div>
+
+        <!-- 3. Cantidad y Botón de Acción -->
+        <div class="form-row">
+          <div class="form-group" style="max-width: 340px;">
+            <label for="gen-cantidad">Cantidad de ejercicios por cada tipo (Tandas):</label>
+            <input type="number" id="gen-cantidad" class="form-control" value="1" min="1" max="10" placeholder="Ej. 1, 2, 4">
+            <div id="gen-total-calc" style="font-size: 0.82rem; color: var(--primary); margin-top: 0.4rem; font-weight: 600;">
+              Total: 11 tipos seleccionados × 1 = 11 ejercicios a generar
+            </div>
+          </div>
+          <div>
+            <button class="btn-primary" id="btn-generar">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Generar Ejercicios y Gráficos
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado de Carga -->
+      <div class="loading-box" id="gen-loading">
+        <div class="spinner"></div>
+        <p style="color: var(--primary); font-weight: 600;">Consultando tablas oficiales y renderizando curvas de probabilidad...</p>
+      </div>
+
+      <!-- Panel de Resultados Generados -->
+      <div id="gen-results-panel" style="display: none;">
+        <div class="results-header-bar">
+          <div class="results-stats" id="gen-stats-text">Ejercicios generados:</div>
+          <div class="results-actions">
+            <button class="btn-secondary" id="btn-descargar-pdf">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              Descargar Guía en PDF
+            </button>
+          </div>
+        </div>
+
+        <div id="gen-results-list"></div>
+      </div>
+
+      <!-- Estado Vacío Inicial -->
+      <div class="empty-state" id="gen-empty-state">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <p>Ajusta las opciones arriba y haz clic en <strong>"Generar Ejercicios y Gráficos"</strong> para obtener tu lote personalizado.</p>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 2: RESOLVEDOR PERSONALIZADO & GENERADOR DE GRÁFICOS
+         ==================================================================== -->
+    <section id="tab-resolver" class="tab-content" role="tabpanel">
+      <div class="card-panel">
+        <div class="panel-header">
+          <h2>
+            <svg width="24" height="24" fill="none" stroke="var(--primary)" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Resolvedor de Ejercicios Propios & Gráficas a Medida
+          </h2>
+          <p>Introduce cualquier ejercicio que ya tengas propuesto para obtener la solución paso a paso citando la tabla, o genera únicamente la gráfica sombreada si ya tienes el cálculo resuelto.</p>
+        </div>
+
+        <div class="form-row">
+          <!-- Distribución -->
+          <div class="form-group">
+            <label for="res-dist">Distribución a utilizar:</label>
+            <select id="res-dist" class="form-control">
+              <option value="z">Normal Estándar Z ~ N(0, 1)</option>
+              <option value="t">t-Student T ~ t(r)</option>
+              <option value="chi">Chi-cuadrado X ~ χ²(r)</option>
+              <option value="fisher">Fisher-Snedecor F ~ F(r₁, r₂)</option>
+            </select>
+          </div>
+
+          <!-- Grados de libertad para t o Chi -->
+          <div class="form-group" id="res-df-group" style="display: none;">
+            <label for="res-df">Grados de libertad (r):</label>
+            <input type="number" id="res-df" class="form-control" value="10" min="1" max="120">
+          </div>
+
+          <!-- Grados de libertad para Fisher -->
+          <div class="form-group" id="res-r1-group" style="display: none;">
+            <label for="res-r1">Numerador (r₁):</label>
+            <input type="number" id="res-r1" class="form-control" value="5" min="1" max="120">
+          </div>
+          <div class="form-group" id="res-r2-group" style="display: none;">
+            <label for="res-r2">Denominador (r₂):</label>
+            <input type="number" id="res-r2" class="form-control" value="10" min="1" max="120">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Operación -->
+          <div class="form-group">
+            <label for="res-op">Tipo de consulta / Operación:</label>
+            <select id="res-op" class="form-control">
+              <option value="<=">Cola izquierda: P(X ≤ a)</option>
+              <option value=">=">Cola derecha: P(X ≥ a)</option>
+              <option value="intervalo">Intervalo bilateral: P(a ≤ X ≤ b)</option>
+              <option value="inv_le">Inversa cola izq.: Dado P(X ≤ c) = p, hallar c</option>
+              <option value="inv_ge">Inversa cola der.: Dado P(X ≥ c) = p, hallar c</option>
+            </select>
+          </div>
+
+          <!-- Valor 1 -->
+          <div class="form-group" id="res-val1-group">
+            <label id="res-val1-label" for="res-val1">Punto crítico 'a':</label>
+            <input type="number" id="res-val1" class="form-control" step="any" value="1.45" placeholder="Ej. 1.45">
+          </div>
+
+          <!-- Valor 2 (para intervalo) -->
+          <div class="form-group" id="res-val2-group" style="display: none;">
+            <label for="res-val2">Límite superior 'b':</label>
+            <input type="number" id="res-val2" class="form-control" step="any" value="2.10" placeholder="Ej. 2.10">
+          </div>
+        </div>
+
+        <!-- Modo de entrega -->
+        <label style="font-size: 0.86rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.6rem; display: block;">Modo de salida deseado:</label>
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.8rem; flex-wrap: wrap;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff;">
+            <input type="radio" name="res-modo" value="full" checked>
+            <span>Completo (Orden + Solución + Gráfico)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff;">
+            <input type="radio" name="res-modo" value="grafico">
+            <span>Solo Gráfico (curva sombreada)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #fff;">
+            <input type="radio" name="res-modo" value="resolucion">
+            <span>Solo Resolución analítica</span>
+          </label>
+        </div>
+
+        <button class="btn-primary" id="btn-resolver">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Calcular y Generar
+        </button>
+      </div>
+
+      <!-- Tarjeta de resultado puntual -->
+      <div id="res-result-card" class="exercise-card" style="display: none;"></div>
+    </section>
+
+    <!-- ====================================================================
+         PESTAÑA 3: EXPLORADOR DE TABLAS OFICIALES
+         ==================================================================== -->
+    <section id="tab-tablas" class="tab-content" role="tabpanel">
+      <div class="card-panel">
+        <div class="panel-header">
+          <h2>
+            <svg width="24" height="24" fill="none" stroke="var(--primary)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Visor de Tablas Estadísticas Oficiales
+          </h2>
+          <p>Inspecciona directamente las matrices numéricas extraídas de los PDFs del curso con sus filas y columnas exactas.</p>
+        </div>
+
+        <div style="display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+          <button class="btn-filter-shortcut btn-tbl-tab active" data-tbl="z">Normal Estándar Z (0.0 a 3.4)</button>
+          <button class="btn-filter-shortcut btn-tbl-tab" data-tbl="t">t-Student T (gl 1 a ∞)</button>
+          <button class="btn-filter-shortcut btn-tbl-tab" data-tbl="chi">Chi-cuadrado χ² (gl 1 a 120)</button>
+          <button class="btn-filter-shortcut btn-tbl-tab" data-tbl="fisher">Fisher-Snedecor F (Nivel 0.950)</button>
+        </div>
+
+        <div id="tabla-container"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="site-footer">
+    <p><strong>Estadística Hub</strong> &bull; Pipeline de Probabilidad y Estadística Oficial &bull; Desarrollado en Python con Matplotlib y ReportLab</p>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
