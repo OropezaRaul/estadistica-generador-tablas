@@ -153,6 +153,36 @@ class GeneradorEjercicios:
 
         elif crit == 5:
             if params.get("val") and isinstance(params.get("val"), (list, tuple)):
+                a, b = sorted(params.get("val"))
+            else:
+                a = round(random.uniform(0.20, 1.60), 2)
+                b = round(a + random.uniform(0.40, 1.20), 2)
+                if b > 2.80: b = 2.80
+            p_a, ra_k, ca_k = self.tm.get_z(a)
+            p_b, rb_k, cb_k = self.tm.get_z(b)
+            res = round(p_b - p_a, 4)
+            e["criterio_nombre"] = "+ <= <= +"
+            e["orden"] = f"P({a:.2f} \\le Z \\le {b:.2f}) = ?"
+            e["resolucion"] = (
+                f"**Paso 1: Identificación y modelo.**\n"
+                f"Intervalo positivo $[{a:.2f}, {b:.2f}]$ en $Z \\sim \\mathcal{{N}}(0, 1)$.\n\n"
+                f"**Paso 2: Resta de acumuladas directas.**\n"
+                f"$$P({a:.2f} \\le Z \\le {b:.2f}) = P(Z \\le {b:.2f}) - P(Z \\le {a:.2f})$$\n\n"
+                f"**Paso 3: Consulta en la Tabla Normal Estándar.**\n"
+                f"- $P(Z \\le {b:.2f}) = {p_b:.4f}$\n"
+                f"- $P(Z \\le {a:.2f}) = {p_a:.4f}$\n\n"
+                f"**Paso 4: Cálculo analítico.**\n"
+                f"$$P({a:.2f} \\le Z \\le {b:.2f}) = {p_b:.4f} - {p_a:.4f} = {res:.4f}$$\n\n"
+                f"**Paso 5: Conclusión.**\n"
+                f"$$P({a:.2f} \\le Z \\le {b:.2f}) = {res:.4f}$$ (o {res*100:.2f}%)."
+            )
+            e["region_type"] = "interval"
+            e["points"] = [a, b]
+            e["labels"] = [f"z1 = {a:.2f}", f"z2 = {b:.2f}"]
+            e["probabilidad"] = res
+
+        elif crit == 6:
+            if params.get("val") and isinstance(params.get("val"), (list, tuple)):
                 a, b = params.get("val")
             else:
                 a = round(random.uniform(0.50, 2.30), 2)
@@ -180,36 +210,6 @@ class GeneradorEjercicios:
             e["region_type"] = "interval"
             e["points"] = [-a, b]
             e["labels"] = [f"z1 = -{a:.2f}", f"z2 = {b:.2f}"]
-            e["probabilidad"] = res
-
-        elif crit == 6:
-            if params.get("val") and isinstance(params.get("val"), (list, tuple)):
-                a, b = sorted(params.get("val"))
-            else:
-                a = round(random.uniform(0.20, 1.60), 2)
-                b = round(a + random.uniform(0.40, 1.20), 2)
-                if b > 2.80: b = 2.80
-            p_a, ra_k, ca_k = self.tm.get_z(a)
-            p_b, rb_k, cb_k = self.tm.get_z(b)
-            res = round(p_b - p_a, 4)
-            e["criterio_nombre"] = "+ <= <= +"
-            e["orden"] = f"P({a:.2f} \\le Z \\le {b:.2f}) = ?"
-            e["resolucion"] = (
-                f"**Paso 1: Identificación y modelo.**\n"
-                f"Intervalo positivo $[{a:.2f}, {b:.2f}]$ en $Z \\sim \\mathcal{{N}}(0, 1)$.\n\n"
-                f"**Paso 2: Resta de acumuladas directas.**\n"
-                f"$$P({a:.2f} \\le Z \\le {b:.2f}) = P(Z \\le {b:.2f}) - P(Z \\le {a:.2f})$$\n\n"
-                f"**Paso 3: Consulta en la Tabla Normal Estándar.**\n"
-                f"- $P(Z \\le {b:.2f}) = {p_b:.4f}$\n"
-                f"- $P(Z \\le {a:.2f}) = {p_a:.4f}$\n\n"
-                f"**Paso 4: Cálculo analítico.**\n"
-                f"$$P({a:.2f} \\le Z \\le {b:.2f}) = {p_b:.4f} - {p_a:.4f} = {res:.4f}$$\n\n"
-                f"**Paso 5: Conclusión.**\n"
-                f"$$P({a:.2f} \\le Z \\le {b:.2f}) = {res:.4f}$$ (o {res*100:.2f}%)."
-            )
-            e["region_type"] = "interval"
-            e["points"] = [a, b]
-            e["labels"] = [f"z1 = {a:.2f}", f"z2 = {b:.2f}"]
             e["probabilidad"] = res
 
         elif crit == 7:
@@ -423,6 +423,24 @@ class GeneradorEjercicios:
             e["probabilidad"] = float(p_level)
 
         elif crit == 5:
+            idx1 = random.randint(0, len(t_probs) - 3)
+            idx2 = random.randint(idx1 + 1, len(t_probs) - 1)
+            pa_level, pb_level = t_probs[idx1], t_probs[idx2]
+            a = self.tm.get_t(df, pa_level)
+            b = self.tm.get_t(df, pb_level)
+            res = round(float(pb_level) - float(pa_level), 3)
+            e["criterio_nombre"] = "+ <= <= +"
+            e["orden"] = f"P({a:.3f} \\le T_{{{df}}} \\le {b:.3f}) = ?"
+            e["resolucion"] = (
+                f"**Paso 1: Resta de acumuladas directas.**\n"
+                f"$$P({a:.3f} \\le T_{{{df}}} \\le {b:.3f}) = {pb_level} - {pa_level} = {res:.3f}$$"
+            )
+            e["region_type"] = "interval"
+            e["points"] = [a, b]
+            e["labels"] = [f"t1 = {a:.3f}", f"t2 = {b:.3f}"]
+            e["probabilidad"] = res
+
+        elif crit == 6:
             pa_level = random.choice(["0.900", "0.950"])
             pb_level = random.choice(["0.975", "0.990"])
             a = self.tm.get_t(df, pa_level)
@@ -440,24 +458,6 @@ class GeneradorEjercicios:
             e["region_type"] = "interval"
             e["points"] = [-a, b]
             e["labels"] = [f"t1 = -{a:.3f}", f"t2 = {b:.3f}"]
-            e["probabilidad"] = res
-
-        elif crit == 6:
-            idx1 = random.randint(0, len(t_probs) - 3)
-            idx2 = random.randint(idx1 + 1, len(t_probs) - 1)
-            pa_level, pb_level = t_probs[idx1], t_probs[idx2]
-            a = self.tm.get_t(df, pa_level)
-            b = self.tm.get_t(df, pb_level)
-            res = round(float(pb_level) - float(pa_level), 3)
-            e["criterio_nombre"] = "+ <= <= +"
-            e["orden"] = f"P({a:.3f} \\le T_{{{df}}} \\le {b:.3f}) = ?"
-            e["resolucion"] = (
-                f"**Paso 1: Resta de acumuladas directas.**\n"
-                f"$$P({a:.3f} \\le T_{{{df}}} \\le {b:.3f}) = {pb_level} - {pa_level} = {res:.3f}$$"
-            )
-            e["region_type"] = "interval"
-            e["points"] = [a, b]
-            e["labels"] = [f"t1 = {a:.3f}", f"t2 = {b:.3f}"]
             e["probabilidad"] = res
 
         elif crit == 7:
@@ -598,20 +598,6 @@ class GeneradorEjercicios:
             e["probabilidad"] = res
 
         elif crit == 5:
-            pa = random.choice(["0.025", "0.050", "0.100"])
-            pb = random.choice(["0.900", "0.950", "0.975"])
-            a = self.tm.get_chi(df, pa)
-            b = self.tm.get_chi(df, pb)
-            res = round(float(pb) - float(pa), 3)
-            e["criterio_nombre"] = "- <= <= +"
-            e["orden"] = f"P({a:.3f} \\le \\chi^2_{{{df}}} \\le {b:.3f}) = ?"
-            e["resolucion"] = f"Intervalo central: $$P({a:.3f} \\le \\chi^2_{{{df}}} \\le {b:.3f}) = {pb} - {pa} = {res:.3f}$$"
-            e["region_type"] = "interval"
-            e["points"] = [a, b]
-            e["labels"] = [f"chi2_1 = {a:.3f}", f"chi2_2 = {b:.3f}"]
-            e["probabilidad"] = res
-
-        elif crit == 6:
             idx1 = random.randint(0, len(upper_cols) - 2)
             idx2 = random.randint(idx1 + 1, len(upper_cols) - 1)
             pa, pb = upper_cols[idx1], upper_cols[idx2]
@@ -624,6 +610,20 @@ class GeneradorEjercicios:
             e["region_type"] = "interval"
             e["points"] = [b1, b2]
             e["labels"] = [f"chi2_1 = {b1:.3f}", f"chi2_2 = {b2:.3f}"]
+            e["probabilidad"] = res
+
+        elif crit == 6:
+            pa = random.choice(["0.025", "0.050", "0.100"])
+            pb = random.choice(["0.900", "0.950", "0.975"])
+            a = self.tm.get_chi(df, pa)
+            b = self.tm.get_chi(df, pb)
+            res = round(float(pb) - float(pa), 3)
+            e["criterio_nombre"] = "- <= <= +"
+            e["orden"] = f"P({a:.3f} \\le \\chi^2_{{{df}}} \\le {b:.3f}) = ?"
+            e["resolucion"] = f"Intervalo central: $$P({a:.3f} \\le \\chi^2_{{{df}}} \\le {b:.3f}) = {pb} - {pa} = {res:.3f}$$"
+            e["region_type"] = "interval"
+            e["points"] = [a, b]
+            e["labels"] = [f"chi2_1 = {a:.3f}", f"chi2_2 = {b:.3f}"]
             e["probabilidad"] = res
 
         elif crit == 7:
@@ -762,6 +762,19 @@ class GeneradorEjercicios:
             e["probabilidad"] = float(p)
 
         elif crit == 5:
+            pa, pb = "0.950", "0.990"
+            b1 = self.tm.get_fisher_upper(r1, r2, pa)
+            b2 = self.tm.get_fisher_upper(r1, r2, pb)
+            res = round(float(pb) - float(pa), 3)
+            e["criterio_nombre"] = "+ <= <= +"
+            e["orden"] = f"P({b1:.2f} \\le F_{{{r1}, {r2}}} \\le {b2:.2f}) = ?"
+            e["resolucion"] = f"Intervalo superior: $$P({b1:.2f} \\le F \\le {b2:.2f}) = {pb} - {pa} = {res:.3f}$$"
+            e["region_type"] = "interval"
+            e["points"] = [b1, b2]
+            e["labels"] = [f"F1 = {b1:.2f}", f"F2 = {b2:.2f}"]
+            e["probabilidad"] = res
+
+        elif crit == 6:
             p = random.choice(["0.950", "0.975"])
             alpha_str = f"{1.0 - float(p):.3f}"
             a, f_inv = self.tm.get_fisher_lower(r1, r2, p)
@@ -773,19 +786,6 @@ class GeneradorEjercicios:
             e["region_type"] = "interval"
             e["points"] = [a, b]
             e["labels"] = [f"F1 = {a:.4f}", f"F2 = {b:.2f}"]
-            e["probabilidad"] = res
-
-        elif crit == 6:
-            pa, pb = "0.950", "0.990"
-            b1 = self.tm.get_fisher_upper(r1, r2, pa)
-            b2 = self.tm.get_fisher_upper(r1, r2, pb)
-            res = round(float(pb) - float(pa), 3)
-            e["criterio_nombre"] = "+ <= <= +"
-            e["orden"] = f"P({b1:.2f} \\le F_{{{r1}, {r2}}} \\le {b2:.2f}) = ?"
-            e["resolucion"] = f"Intervalo superior: $$P({b1:.2f} \\le F \\le {b2:.2f}) = {pb} - {pa} = {res:.3f}$$"
-            e["region_type"] = "interval"
-            e["points"] = [b1, b2]
-            e["labels"] = [f"F1 = {b1:.2f}", f"F2 = {b2:.2f}"]
             e["probabilidad"] = res
 
         elif crit == 7:
@@ -873,8 +873,8 @@ class GeneradorEjercicios:
         ej_id = 1
 
         for dist in distribuciones:
-            for tanda in range(1, repeticiones_por_tipo + 1):
-                for crit in criterios:
+            for crit in criterios:
+                for tanda in range(1, repeticiones_por_tipo + 1):
                     tanda_params = dict(params)
                     tanda_params["_tanda"] = tanda
                     ej = self.generar_ejercicio(dist, crit, params=tanda_params, ej_id=ej_id)

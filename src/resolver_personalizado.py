@@ -151,14 +151,40 @@ class ResolverPersonalizado:
 
         elif op in ["intervalo", "between"]:
             v1, v2 = sorted([float(x) for x in val])
-            if v1 < 0 and v2 > 0:
-                # Criterio 5: - <= <= +
+            if v1 >= 0 and v2 >= 0:
+                # Criterio 5: + <= <= +
+                p1, r1_k, c1_k = self.tm.get_z(v1)
+                p2, r2_k, c2_k = self.tm.get_z(v2)
+                res = round(p2 - p1, 4)
+                e["criterio_id"] = 5
+                e["criterio_nombre"] = "+ <= <= +"
+                e["orden"] = f"P({v1:.2f} \\le Z \\le {v2:.2f}) = ?"
+                e["resolucion"] = (
+                    f"**Paso 1: Identificación y modelo.**\n"
+                    f"Intervalo positivo $[{v1:.2f}, {v2:.2f}]$ en $Z \\sim \\mathcal{{N}}(0, 1)$.\n\n"
+                    f"**Paso 2: Resta de acumuladas directas.**\n"
+                    f"$$P({v1:.2f} \\le Z \\le {v2:.2f}) = P(Z \\le {v2:.2f}) - P(Z \\le {v1:.2f})$$\n\n"
+                    f"**Paso 3: Consulta en la Tabla Normal Estándar.**\n"
+                    f"- $P(Z \\le {v2:.2f}) = {p2:.4f}$\n"
+                    f"- $P(Z \\le {v1:.2f}) = {p1:.4f}$\n\n"
+                    f"**Paso 4: Cálculo analítico.**\n"
+                    f"$$P({v1:.2f} \\le Z \\le {v2:.2f}) = {p2:.4f} - {p1:.4f} = {res:.4f}$$\n\n"
+                    f"**Paso 5: Conclusión.**\n"
+                    f"$$P({v1:.2f} \\le Z \\le {v2:.2f}) = {res:.4f}$$ (o {res*100:.2f}%)."
+                )
+                e["region_type"] = "interval"
+                e["points"] = [v1, v2]
+                e["labels"] = [f"z1 = {v1:.2f}", f"z2 = {v2:.2f}"]
+                e["probabilidad"] = res
+
+            elif v1 < 0 and v2 > 0:
+                # Criterio 6: - <= <= +
                 pos_v1 = abs(v1)
                 p1, r1_k, c1_k = self.tm.get_z(pos_v1)
                 p2, r2_k, c2_k = self.tm.get_z(v2)
                 p_lower = round(1.0 - p1, 4)
-                res = round(p2 - p_lower, 4)
-                e["criterio_id"] = 5
+                res = round(p_b - p_lower, 4) if 'p_b' in locals() else round(p2 - p_lower, 4)
+                e["criterio_id"] = 6
                 e["criterio_nombre"] = "- <= <= +"
                 e["orden"] = f"P({v1:.2f} \\le Z \\le {v2:.2f}) = ?"
                 e["resolucion"] = (
@@ -172,32 +198,6 @@ class ResolverPersonalizado:
                     f"- $P(Z \\le {pos_v1:.2f}) = {p1:.4f} \\implies P(Z \\le {v1:.2f}) = {p_lower:.4f}$\n\n"
                     f"**Paso 4: Cálculo analítico.**\n"
                     f"$$P({v1:.2f} \\le Z \\le {v2:.2f}) = {p2:.4f} - {p_lower:.4f} = {res:.4f}$$\n\n"
-                    f"**Paso 5: Conclusión.**\n"
-                    f"$$P({v1:.2f} \\le Z \\le {v2:.2f}) = {res:.4f}$$ (o {res*100:.2f}%)."
-                )
-                e["region_type"] = "interval"
-                e["points"] = [v1, v2]
-                e["labels"] = [f"z1 = {v1:.2f}", f"z2 = {v2:.2f}"]
-                e["probabilidad"] = res
-
-            elif v1 >= 0 and v2 >= 0:
-                # Criterio 6: + <= <= +
-                p1, r1_k, c1_k = self.tm.get_z(v1)
-                p2, r2_k, c2_k = self.tm.get_z(v2)
-                res = round(p2 - p1, 4)
-                e["criterio_id"] = 6
-                e["criterio_nombre"] = "+ <= <= +"
-                e["orden"] = f"P({v1:.2f} \\le Z \\le {v2:.2f}) = ?"
-                e["resolucion"] = (
-                    f"**Paso 1: Identificación y modelo.**\n"
-                    f"Intervalo positivo $[{v1:.2f}, {v2:.2f}]$ en $Z \\sim \\mathcal{{N}}(0, 1)$.\n\n"
-                    f"**Paso 2: Resta de acumuladas directas.**\n"
-                    f"$$P({v1:.2f} \\le Z \\le {v2:.2f}) = P(Z \\le {v2:.2f}) - P(Z \\le {v1:.2f})$$\n\n"
-                    f"**Paso 3: Consulta en la Tabla Normal Estándar.**\n"
-                    f"- $P(Z \\le {v2:.2f}) = {p2:.4f}$\n"
-                    f"- $P(Z \\le {v1:.2f}) = {p1:.4f}$\n\n"
-                    f"**Paso 4: Cálculo analítico.**\n"
-                    f"$$P({v1:.2f} \\le Z \\le {v2:.2f}) = {p2:.4f} - {p1:.4f} = {res:.4f}$$\n\n"
                     f"**Paso 5: Conclusión.**\n"
                     f"$$P({v1:.2f} \\le Z \\le {v2:.2f}) = {res:.4f}$$ (o {res*100:.2f}%)."
                 )

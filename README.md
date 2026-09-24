@@ -119,8 +119,8 @@ Todos los documentos PDF generados se exportan de forma ordenada y secuencial a 
 | **2** | `<= -` | Cola izquierda negativa | $P(X \le -a) = 1 - P(X \le a)$ | Percentil bajo tabulado o inversión |
 | **3** | `>= +` | Cola derecha positiva | $P(X \ge a) = 1 - P(X \le a)$ | Complemento en cuantil alto |
 | **4** | `>= -` | Cola derecha negativa | $P(X \ge -a) = P(X \le a)$ | Complemento en cuantil bajo |
-| **5** | `- <= <= +` | Intervalo asimétrico | $P(Z \le b) - [1 - P(Z \le a)]$ | Intervalo entre cuantil inferior y superior |
-| **6** | `+ <= <= +` | Intervalo positivo | $P(Z \le b) - P(Z \le a)$ | Resta de cuantiles superiores |
+| **5** | `+ <= <= +` | Intervalo positivo | $P(Z \le b) - P(Z \le a)$ | Resta de cuantiles superiores |
+| **6** | `- <= <= +` | Intervalo asimétrico | $P(Z \le b) - [1 - P(Z \le a)]$ | Intervalo entre cuantil inferior y superior |
 | **7** | `- <= <= -` | Intervalo negativo | $P(Z \le a) - P(Z \le b)$ | Resta de cuantiles inferiores |
 | **8** | `<= C` | Inversa cola izquierda | Dado $P(X \le c) = p \to c > 0$ | Búsqueda directa en cuantil superior |
 | **9** | `>= C` | Inversa cola derecha | Dado $P(X \ge c) = p \to c > 0$ | Complemento $P(X \le c) = 1 - p$ |
